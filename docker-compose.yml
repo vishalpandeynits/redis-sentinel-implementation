@@ -1,0 +1,31 @@
+version: '3'
+services:
+  web:
+    build: web-conf
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+  redis-master:
+    container_name: "redis-master"
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  redis-slave:
+    container_name: "redis-slave"
+    image: redis:alpine
+    ports:
+      - "6380:6380"
+    depends_on:
+      - redis-master
+  redis-sentinel:
+    build: redis-conf
+    environment:
+      - SENTINEL_DOWN_AFTER=5000
+      - SENTINEL_FAILOVER=5000
+    ports:
+      - "26379:26379"
+    depends_on:
+      - redis-master
+      - redis-slave
